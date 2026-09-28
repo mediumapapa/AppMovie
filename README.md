@@ -9,7 +9,8 @@ Elección de proyecto:
 Equipo:
 
 - Guerrero Colín Santiago
-- Ávila Aguilar Alberto
+- Vazquez Enriquez Alberto
+- Diaz Castellanos Isaias Alejandro
 
 ## Flujos 
 
