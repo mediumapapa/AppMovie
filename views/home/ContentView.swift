@@ -10,6 +10,9 @@ import SwiftUI
 struct ContentView: View {
     //guarda en tiempo real el texto que el usuario ingresa en el buscador
     @State private var searchText: String = ""
+    
+    // Película seleccionada para mostrar en pantalla completa el detalle
+    @State private var selectedMovie: Movie? = nil
 
     var body: some View {
         VStack(spacing: 0) {
@@ -28,18 +31,27 @@ struct ContentView: View {
                     // Sección 1: Popular this week
                     MovieSectionView(
                         title: "Popular this week",
-                        movies: Movie.sampleMovies
+                        movies: Movie.sampleMovies,
+                        onSelectMovie: { movie in
+                            selectedMovie = movie
+                        }
                     )
                     
                     // Sección 2: Action
                     MovieSectionView(
                         title: "Action",
-                        movies: Movie.sampleMovies
+                        movies: Movie.sampleMovies,
+                        onSelectMovie: { movie in
+                            selectedMovie = movie
+                        }
                     )
-
+                    // Sección 3: Drama
                     MovieSectionView(
                         title: "Drama",
-                        movies: Movie.sampleMovies
+                        movies: Movie.sampleMovies,
+                        onSelectMovie: { movie in
+                            selectedMovie = movie
+                        }
                     )
                     
                     Spacer(minLength: 30)
@@ -47,6 +59,9 @@ struct ContentView: View {
             }
         }
         .background(Color.white.ignoresSafeArea())
+        .fullScreenCover(item: $selectedMovie) { movie in
+            MovieDetail(movie: movie)
+        }
     }
     
     // Header Bar

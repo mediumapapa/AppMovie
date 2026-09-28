@@ -50,5 +50,5 @@ struct MovieCardView: View {
 }
 
 #Preview {
-    MovieCardView(movie: Movie.samplePopular[0])
+    MovieCardView(movie: Movie.sampleMovies[0])
 }

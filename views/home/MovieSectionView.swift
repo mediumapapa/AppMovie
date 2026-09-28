@@ -3,6 +3,7 @@ import SwiftUI
 struct MovieSectionView: View {
     let title: String
     let movies: [Movie]
+    var onSelectMovie: ((Movie) -> Void)? = nil
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -33,6 +34,9 @@ struct MovieSectionView: View {
                 HStack(spacing: 14) {
                     ForEach(movies) { movie in
                         MovieCardView(movie: movie)
+                            .onTapGesture {
+                                onSelectMovie?(movie)
+                            }
                     }
                 }
                 .padding(.horizontal, 20)
