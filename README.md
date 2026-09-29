@@ -9,22 +9,34 @@ Elección de proyecto:
 Equipo:
 
 - Guerrero Colín Santiago
-- Ávila Aguilar Alberto
+- Diaz Castellanos Alejandro Isaias
+- Vazquez Enriquez Alberto
 
 ## Flujos 
 
-<img width="1920" height="1080" alt="Historia de Instagram Pantalla Teléfono Celular Fin de Semana Llamando Foto Relax Minimalista Negro" src="https://github.com/user-attachments/assets/d6cf4389-c5a0-4685-96d4-ca391fef55f8" />
+<img width="1526" height="1381" alt="image" src="https://github.com/user-attachments/assets/34e957b1-a63a-4bb1-a08b-f67b5c9ad7af" />
 
-1) Pantalla de inicio -> lista de películas -> detalle de la película
 
-2) Pantalla de inicio -> búsqueda -> resultado -> detalle de la película
-
-3) Pantalla de inicio -> favoritos -> película guardadas -> detalle de la película
-
-4) Pantalla de inicio -> listas personalizadas -> películas listadas -> detalle de la película
+1) Login → pantalla de inicio → lista de películas → detalle de la película
+2) Login → pantalla de inicio → búsqueda → resultado → detalle de la película
+3) Login → pantalla de inicio → favoritos → películas guardadas → detalle de la película
+4) Login → pantalla de inicio → listas personalizadas → películas listadas → detalle de la película
 
 
 ## Especificación de pantallas
+
+### **Login**
+
+<img width="335" height="640" alt="image" src="https://github.com/user-attachments/assets/e5c9c35d-fd6f-4bab-95c4-9e5bac707c0e" />
+
+Pantalla para iniciar sesión.
+
+- En la parte superior estará la barra con el nombre de la aplicación, sin los botones de listas, favoritos ni cuenta, ya que el usuario aún no ha iniciado sesión
+- Se pedirá el correo electrónico y la contraseña; el campo de contraseña tendrá un ícono de ojo para mostrarla u ocultarla
+- Al presionar el botón "Ingresar" se validarán los datos. Si son correctos, nos llevará a la pantalla principal; si no, se mostrará un mensaje de error
+- Debajo del botón habrá un enlace "¿No tienes cuenta? Regístrate" para crear una cuenta nueva
+- Se dispondrá de la opción "¿Olvidaste tu contraseña?" para recuperar el acceso
+
 
 #### **Home**
 
