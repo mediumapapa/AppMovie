@@ -3,7 +3,7 @@ import SwiftUI
 struct MovieSectionView: View {
     let title: String
     let movies: [Movie]
-    var onSelectMovie: ((Movie) -> Void)? = nil
+    var onSelectMovie: ((Movie) -> Void)? = nil // variable que guarda la función de callback para manejar la selección de una película
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -34,7 +34,7 @@ struct MovieSectionView: View {
                 HStack(spacing: 14) {
                     ForEach(movies) { movie in
                         MovieCardView(movie: movie)
-                            .onTapGesture {
+                            .onTapGesture { //Detecta el toque en la tarjeta de la película
                                 onSelectMovie?(movie)
                             }
                     }

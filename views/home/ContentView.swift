@@ -97,11 +97,11 @@ struct ContentView: View {
     // Buscador 
     private var searchBar: some View {
         HStack(spacing: 14) {
-            Text("Serch")
+            Text("Search")
                 .font(.system(size: 20, weight: .regular))
                 .foregroundColor(.black)
             
-            TextField("", text: $searchText)
+            TextField("", text: $searchText) // Campo de texto para ingresar la búsqueda
                 .padding(.horizontal, 14)
                 .frame(height: 38)
                 .background(Color.white)

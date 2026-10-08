@@ -2,7 +2,8 @@ import SwiftUI
 
 struct MovieDetail: View {
     let movie: Movie
-    @Environment(\.dismiss) private var dismiss
+    
+    @Environment(\.dismiss) private var dismiss// Variable de entorno para manejar la acción de cerrar la vista
     
     var body: some View {
         VStack(spacing: 20) {
