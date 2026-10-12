@@ -78,3 +78,41 @@ Listas personalizadas-
 - Inmediatamente al costado derecho de la lista, habrá una flecha que nos permitirá seleccionar entre las listas que tengamos creadas
 - En la parte inferior de la pantalla, se dispondrá un botón (tres círculos) para cargar el resto de películas si es que es necesario
 - En la parte superior izquierda habrá un botón de retroceso
+
+## Investigación: MVVM
+
+### ¿Qué es MVVM?
+
+MVVM significa **Model - View - ViewModel**. Es un patrón de arquitectura, es decir, una forma de organizar el código de una app para que cada parte tenga un solo trabajo. En SwiftUI se usa mucho porque las vistas se actualizan solas cuando cambian los datos que observan.
+
+Sin un patrón, es común que toda la lógica termine dentro de las vistas: guardar datos, filtrar, validar y llamar a una API. Cuando la app crece, las vistas se vuelven muy largas y difíciles de entender y modificar. MVVM ayuda a evitarlo separando el código en tres partes:
+
+- **Model (Modelo):** representa los datos de la app y no sabe nada de las pantallas. Solo dice qué información tiene algo. En nuestro caso es `Movie`, con su título, descripción y póster. Más adelante, los datos que lleguen de la API de TMDB también serán modelos.
+
+- **View (Vista):** es lo que el usuario ve en la pantalla. Su trabajo es dibujar la interfaz (textos, botones, imágenes, colores) y avisar cuando el usuario hace algo, por ejemplo tocar un botón o escribir en el buscador. La vista no debería decidir nada; solo muestra lo que le dan. Por ejemplo: `ContentView`, `LoginView`, `MovieDetail`.
+
+- **ViewModel:** es el intermediario entre la vista y los datos. Guarda el estado de la pantalla (lo que el usuario escribió, la lista de películas, un mensaje de error) y contiene la lógica: buscar, filtrar, validar, agregar a favoritos o pedir datos a la API. En SwiftUI se hace con una clase `@Observable`, para que la vista se actualice sola cuando algo cambia.
+
+**¿Cómo se comunican?** La vista le avisa al ViewModel que el usuario hizo algo. El ViewModel actualiza los datos usando los modelos y, como es `@Observable`, la vista se vuelve a dibujar automáticamente con la información nueva.
+
+### ¿Cómo está el proyecto hoy?
+
+Ya tenemos una parte separada: `AuthStore` y `FavoritesStore` son clases `@Observable` que guardan la lógica de la sesión y de los favoritos, y las vistas solo llaman a sus funciones. Funcionan como ViewModels compartidos por toda la app.
+
+### ¿Qué podría salir de las vistas?
+
+- **Home (`ContentView`):** la búsqueda (`searchText` y `filteredMovies`) y la obtención de las películas de cada sección, que hoy vienen directo de `Movie.sampleMovies`. Todo esto podría pasar a un `HomeViewModel`.
+- **Login (`LoginView`):** los datos del formulario (`username`, `password`, `errorMessage`) y la lógica de `handleLogin()` podrían pasar a un `LoginViewModel`.
+- **`MovieDetail` y `FavoritesView`:** ya usan `FavoritesStore`, así que por ahora no necesitan más cambios.
+
+**Regla:** lo visual (diseño, abrir o cerrar pantallas, alertas) se queda en la vista. Los datos y las decisiones van al ViewModel.
+
+### Propuesta de organización
+
+```
+Models/      → Movie.swift
+state/       → AuthStore, FavoritesStore
+ViewModels/  → HomeViewModel, LoginViewModel
+views/       → home, login, favorites
+Utils/       → Color.swift
+```
