@@ -9,9 +9,23 @@ import SwiftUI
 
 @main
 struct movies_appApp: App {
+    // Instancias de estado compartido para la aplicación
+    @State private var authStore = AuthStore()
+    @State private var favoritesStore = FavoritesStore()
+
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            Group {
+                if authStore.isLoggedIn {
+                    NavigationStack {
+                        ContentView()
+                    }
+                } else {
+                    LoginView()
+                }
+            }
+            .environment(authStore)
+            .environment(favoritesStore)
         }
     }
 }
