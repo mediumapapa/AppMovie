@@ -2,7 +2,7 @@ import SwiftUI
 
 // Define la estructura Movie q represta una película con sus propiedades
 // Posiblemente se agregue más propiedades en el futuro, como fecha de lanzamiento, calificación, etc.
-struct Movie: Identifiable {
+struct Movie: Identifiable, Hashable { //Se agregó la conformidad al protocolo Hashable para utilizar la navegación moderna de SwiftUI
     var id = UUID()
     let title: String
     let overview: String

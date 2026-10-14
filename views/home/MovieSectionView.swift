@@ -33,10 +33,10 @@ struct MovieSectionView: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 14) {
                     ForEach(movies) { movie in
-                        MovieCardView(movie: movie)
-                            .onTapGesture { //Detecta el toque en la tarjeta de la película
-                                onSelectMovie?(movie)
-                            }
+                        NavigationLink(value: movie) {
+                            MovieCardView(movie: movie)
+                        }
+                        .buttonStyle(PlainButtonStyle())
                     }
                 }
                 .padding(.horizontal, 20)

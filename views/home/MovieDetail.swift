@@ -3,7 +3,8 @@ import SwiftUI
 struct MovieDetail: View {
     let movie: Movie
     
-    @Environment(\.dismiss) private var dismiss// Variable de entorno para manejar la acción de cerrar la vista
+    @Environment(\.dismiss) private var dismiss // Variable de entorno para manejar la acción de cerrar la vista
+    @Environment(FavoritesStore.self) private var favoritesStore // Estado compartido de favoritos
     
     var body: some View {
         VStack(spacing: 20) {
@@ -68,14 +69,21 @@ struct MovieDetail: View {
             
             // Botones de acción inferiores
             HStack(spacing: 36) {
-                Button(action: {}) {
-                    HStack(spacing: 8) {
-                        Image(systemName: "heart")
-                            .font(.system(size: 22, weight: .regular))
-                        Text("Add Favorite")
-                            .font(.system(size: 17, weight: .medium))
+                let isFav = favoritesStore.isFavorite(movie)
+                
+                Button(action: {
+                    withAnimation {
+                        favoritesStore.toggle(movie)
                     }
-                    .foregroundColor(.black)
+                }) {
+                    HStack(spacing: 8) {
+                        Image(systemName: isFav ? "heart.fill" : "heart")
+                            .font(.system(size: 22, weight: .regular))
+                            .foregroundColor(isFav ? .red : .black)
+                        Text(isFav ? "In Favorites" : "Add Favorite")
+                            .font(.system(size: 17, weight: .medium))
+                            .foregroundColor(.black)
+                    }
                 }
                 
                 Button(action: {}) {
@@ -91,6 +99,7 @@ struct MovieDetail: View {
             .padding(.bottom, 24)
         }
         .background(Color.white.ignoresSafeArea())
+        .navigationBarBackButtonHidden(true)
     }
 }
 
@@ -99,4 +108,5 @@ typealias MovieDetailView = MovieDetail
 
 #Preview {
     MovieDetail(movie: Movie.sampleMovies[0])
+        .environment(FavoritesStore())
 }
