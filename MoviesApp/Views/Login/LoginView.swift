@@ -1,97 +1,81 @@
 import SwiftUI
 
 struct LoginView: View {
-    @Environment(AuthStore.self) private var authStore
-    
-    @State private var username: String = ""
-    @State private var password: String = ""
-    @State private var isPasswordVisible: Bool = false
-    @State private var errorMessage: String? = nil
-    
+    @State private var viewModel: LoginViewModel
+
+    init(viewModel: LoginViewModel) {
+        _viewModel = State(initialValue: viewModel)
+    }
+
     var body: some View {
         VStack(spacing: 0) {
-            // Barra Superior 
-            headerBar
-            
+            // Barra Superior: solo el título, sin botones porque aún no hay sesión
+            AppHeaderBar {
+                AppHeaderTitle(text: "TMDB MOVIES")
+                Spacer()
+            }
+
             // Formulario de Login
             ScrollView {
                 VStack(spacing: 24) {
                     Spacer(minLength: 40)
-                    
+
                     // Ícono de Película
                     Image(systemName: "film.stack")
                         .resizable()
                         .scaledToFit()
                         .frame(width: 70, height: 70)
                         .foregroundColor(.black)
-                    
+
                     Text("Iniciar Sesión")
                         .font(.system(size: 24, weight: .heavy, design: .rounded))
                         .foregroundColor(.black)
-                    
+
                     VStack(alignment: .leading, spacing: 18) {
                         // Campo de Correo / Usuario
                         VStack(alignment: .leading, spacing: 8) {
-                            Text("Usuario / Correo")
-                                .font(.system(size: 16, weight: .semibold))
-                                .foregroundColor(.black)
-                            
-                            TextField("Ingresa tu usuario", text: $username)
+                            fieldLabel("Usuario / Correo")
+
+                            TextField("Ingresa tu usuario", text: $viewModel.username)
                                 .textInputAutocapitalization(.never)
                                 .disableAutocorrection(true)
-                                .padding(.horizontal, 14)
-                                .frame(height: 44)
-                                .background(Color.white)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 14)
-                                        .stroke(Color.black, lineWidth: 1.8)
-                                )
+                                .borderedField()
                         }
-                        
+
                         // Campo de Contraseña
                         VStack(alignment: .leading, spacing: 8) {
-                            Text("Contraseña")
-                                .font(.system(size: 16, weight: .semibold))
-                                .foregroundColor(.black)
-                            
+                            fieldLabel("Contraseña")
+
                             HStack {
-                                if isPasswordVisible {
-                                    TextField("Ingresa tu contraseña", text: $password)
+                                if viewModel.isPasswordVisible {
+                                    TextField("Ingresa tu contraseña", text: $viewModel.password)
                                         .textInputAutocapitalization(.never)
                                         .disableAutocorrection(true)
                                 } else {
-                                    SecureField("Ingresa tu contraseña", text: $password)
+                                    SecureField("Ingresa tu contraseña", text: $viewModel.password)
                                 }
-                                
-                                Button(action: {
-                                    isPasswordVisible.toggle()
-                                }) {
-                                    Image(systemName: isPasswordVisible ? "eye.slash.fill" : "eye.fill")
+
+                                Button(action: viewModel.togglePasswordVisibility) {
+                                    Image(systemName: viewModel.isPasswordVisible ? "eye.slash.fill" : "eye.fill")
                                         .foregroundColor(.black.opacity(0.7))
                                 }
                             }
-                            .padding(.horizontal, 14)
-                            .frame(height: 44)
-                            .background(Color.white)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 14)
-                                    .stroke(Color.black, lineWidth: 1.8)
-                            )
+                            .borderedField()
                         }
                     }
                     .padding(.horizontal, 24)
-                    
+
                     // Mensaje de Error si falla la validación
-                    if let errorMessage = errorMessage {
+                    if let errorMessage = viewModel.errorMessage {
                         Text(errorMessage)
                             .font(.system(size: 14, weight: .semibold))
                             .foregroundColor(.red)
                             .multilineTextAlignment(.center)
                             .padding(.horizontal, 24)
                     }
-                    
+
                     // Botón "Ingresar"
-                    Button(action: handleLogin) {
+                    Button(action: viewModel.login) {
                         Text("Ingresar")
                             .font(.system(size: 18, weight: .bold))
                             .foregroundColor(.black)
@@ -106,52 +90,33 @@ struct LoginView: View {
                     }
                     .padding(.horizontal, 24)
                     .padding(.top, 8)
-                    
-                    // Enlaces de navegación externa (según README y navigation-and-state.md)
+
+                    // Enlaces externos de TMDB
                     VStack(spacing: 12) {
-                        Link("¿Olvidaste tu contraseña?", destination: URL(string: "https://www.themoviedb.org/reset-password")!)
+                        Link("¿Olvidaste tu contraseña?", destination: AppLinks.resetPassword)
                             .font(.system(size: 14, weight: .medium))
                             .foregroundColor(.blue)
-                        
-                        Link("¿No tienes cuenta? Regístrate", destination: URL(string: "https://www.themoviedb.org/signup")!)
+
+                        Link("¿No tienes cuenta? Regístrate", destination: AppLinks.signUp)
                             .font(.system(size: 14, weight: .bold))
                             .foregroundColor(.blue)
                     }
                     .padding(.top, 8)
-                    
+
                     Spacer(minLength: 40)
                 }
             }
         }
         .background(Color.white.ignoresSafeArea())
     }
-    
-    // Header Bar: solo el título, sin los botones de listas, favoritos ni cuenta
-    private var headerBar: some View {
-        HStack {
-            Text("TMDB MOVIES")
-                .font(.system(size: 26, weight: .heavy, design: .rounded))
-                .foregroundColor(.black)
-            
-            Spacer()
-        }
-        .padding(.horizontal, 20)
-        .padding(.top, 12)
-        .padding(.bottom, 16)
-        .background(Color.appCyan.ignoresSafeArea(edges: .top))
-    }
-    
-    private func handleLogin() {
-        let success = authStore.login(username: username, password: password)
-        if !success {
-            errorMessage = "Usuario o contraseña inválidos. Por favor completa ambos campos."
-        } else {
-            errorMessage = nil
-        }
+
+    private func fieldLabel(_ text: String) -> some View {
+        Text(text)
+            .font(.system(size: 16, weight: .semibold))
+            .foregroundColor(.black)
     }
 }
 
 #Preview {
-    LoginView()
-        .environment(AuthStore())
+    LoginView(viewModel: LoginViewModel(authStore: AuthStore()))
 }

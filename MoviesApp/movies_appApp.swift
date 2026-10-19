@@ -9,23 +9,27 @@ import SwiftUI
 
 @main
 struct movies_appApp: App {
-    // Instancias de estado compartido para la aplicación
+    // Estado compartido de la app (sesión y favoritos)
     @State private var authStore = AuthStore()
     @State private var favoritesStore = FavoritesStore()
 
+    private let movieService: MovieServiceProtocol = MockMovieService()
+
     var body: some Scene {
         WindowGroup {
-            Group {
-                if authStore.isLoggedIn {
-                    NavigationStack {
-                        ContentView()
-                    }
-                } else {
-                    LoginView()
+            if authStore.isLoggedIn {
+                NavigationStack {
+                    HomeView(
+                        viewModel: HomeViewModel(
+                            authStore: authStore,
+                            favoritesStore: favoritesStore,
+                            service: movieService
+                        )
+                    )
                 }
+            } else {
+                LoginView(viewModel: LoginViewModel(authStore: authStore))
             }
-            .environment(authStore)
-            .environment(favoritesStore)
         }
     }
 }
