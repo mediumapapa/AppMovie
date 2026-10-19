@@ -101,18 +101,25 @@ Ya tenemos una parte separada: `AuthStore` y `FavoritesStore` son clases `@Obser
 
 ### ¿Qué podría salir de las vistas?
 
-- **Home (`ContentView`):** la búsqueda (`searchText` y `filteredMovies`) y la obtención de las películas de cada sección, que hoy vienen directo de `Movie.sampleMovies`. Todo esto podría pasar a un `HomeViewModel`.
+- **Home (`ContentView`, hoy `HomeView`):** la búsqueda (`searchText` y `filteredMovies`) y la obtención de las películas de cada sección, que hoy vienen directo de `Movie.sampleMovies`. Todo esto podría pasar a un `HomeViewModel`.
 - **Login (`LoginView`):** los datos del formulario (`username`, `password`, `errorMessage`) y la lógica de `handleLogin()` podrían pasar a un `LoginViewModel`.
 - **`MovieDetail` y `FavoritesView`:** ya usan `FavoritesStore`, así que por ahora no necesitan más cambios.
 
 **Regla:** lo visual (diseño, abrir o cerrar pantallas, alertas) se queda en la vista. Los datos y las decisiones van al ViewModel.
 
-### Propuesta de organización
+### Organización del proyecto
+
+A partir de la práctica 5 el código está organizado con MVVM. El detalle de los cambios está en [Docs/Practica-5.md](Docs/Practica-5.md).
 
 ```
-Models/      → Movie.swift
-state/       → AuthStore, FavoritesStore
-ViewModels/  → HomeViewModel, LoginViewModel
-views/       → home, login, favorites
-Utils/       → Color.swift
+MoviesApp/
+├── Models/       → Movie, MovieSection
+├── State/        → AuthStore, FavoritesStore
+├── Services/     → MovieServiceProtocol y MockMovieService
+├── ViewModels/   → HomeViewModel, LoginViewModel, MovieDetailViewModel, FavoritesViewModel
+├── Views/        → Home, Login, MovieDetail, Favorites
+├── Components/   → AppHeaderBar, BorderedFieldModifier, MovieCardView, MovieSectionView
+├── Utils/        → AppColors, AppLinks
+└── Resources/    → Assets.xcassets
+Docs/             → Prácticas y diseño de navegación
 ```
