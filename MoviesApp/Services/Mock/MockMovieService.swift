@@ -1,16 +1,8 @@
-import SwiftUI
+import Foundation
 
-// Define la estructura Movie q represta una película con sus propiedades
-// Posiblemente se agregue más propiedades en el futuro, como fecha de lanzamiento, calificación, etc.
-struct Movie: Identifiable, Hashable { //Se agregó la conformidad al protocolo Hashable para utilizar la navegación moderna de SwiftUI
-    var id = UUID()
-    let title: String
-    let overview: String
-    let posterPath: String
-}
-
-//datos locales
+// Datos de prueba mientras se conecta la API de TMDB
 extension Movie {
+
     static let sampleMovies: [Movie] = [
         Movie(title: "Dune: Parte Dos", overview: "Paul Atreides se une a Chani y a los Fremen para buscar venganza.", posterPath: "popcorn.fill"),
         Movie(title: "Interstellar", overview: "Un grupo de exploradores viaja a través de un agujero de gusano en el espacio.", posterPath: "film.fill"),
@@ -23,4 +15,26 @@ extension Movie {
         Movie(title: "Blade Runner 2049", overview: "Un nuevo Blade Runner descubre un secreto que lo lleva a buscar a Rick Deckard.", posterPath: "video.fill"),
         Movie(title: "Fight Club", overview: "Un empleado con insomnio y un vendedor de jabón forman un club de lucha clandestino.", posterPath: "popcorn.fill")
     ]
+}
+
+// Servicio de prueba: regresa las películas locales
+struct MockMovieService: MovieServiceProtocol {
+
+    func popularMovies() -> [Movie] {
+        Movie.sampleMovies
+    }
+
+    func movies(forGenre genre: String) -> [Movie] {
+        Movie.sampleMovies
+    }
+
+    func searchMovies(matching query: String) -> [Movie] {
+        let text = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty else { return [] }
+
+        return Movie.sampleMovies.filter {
+            $0.title.localizedCaseInsensitiveContains(text) ||
+            $0.overview.localizedCaseInsensitiveContains(text)
+        }
+    }
 }
