@@ -152,7 +152,7 @@ struct HomeView: View {
         HomeView(
             viewModel: HomeViewModel(
                 authStore: AuthStore(isLoggedIn: true, currentUser: "Demo"),
-                favoritesStore: FavoritesStore(),
+                favoritesStore: .inMemory(with: [Movie.sampleMovies[0]]),
                 service: MockMovieService()
             )
         )
