@@ -111,15 +111,19 @@ Ya tenemos una parte separada: `AuthStore` y `FavoritesStore` son clases `@Obser
 
 A partir de la práctica 5 el código está organizado con MVVM. El detalle de los cambios está en [Docs/Practica-5.md](Docs/Practica-5.md).
 
+En la práctica 6 los favoritos se guardan con SwiftData y se agregaron pruebas unitarias con XCTest. El detalle está en [Docs/Practica-6.md](Docs/Practica-6.md).
+
 ```
 MoviesApp/
-├── Models/       → Movie, MovieSection
+├── Models/       → Movie, MovieSection, FavoriteMovie (@Model de SwiftData)
 ├── State/        → AuthStore, FavoritesStore
 ├── Services/     → MovieServiceProtocol y MockMovieService
+│                   FavoritesServiceProtocol y FavoritesService (SwiftData)
 ├── ViewModels/   → HomeViewModel, LoginViewModel, MovieDetailViewModel, FavoritesViewModel
 ├── Views/        → Home, Login, MovieDetail, Favorites
 ├── Components/   → AppHeaderBar, BorderedFieldModifier, MovieCardView, MovieSectionView
 ├── Utils/        → AppColors, AppLinks
 └── Resources/    → Assets.xcassets
+MoviesAppTests/   → FavoritesStoreTests, HomeSearchTests (XCTest)
 Docs/             → Prácticas y diseño de navegación
 ```
