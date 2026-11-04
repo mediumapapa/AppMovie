@@ -111,6 +111,6 @@ struct FavoritesView: View {
 
 #Preview {
     NavigationStack {
-        FavoritesView(viewModel: FavoritesViewModel(favoritesStore: FavoritesStore()))
+        FavoritesView(viewModel: FavoritesViewModel(favoritesStore: .inMemory(with: [Movie.sampleMovies[0], Movie.sampleMovies[1]])))
     }
 }
