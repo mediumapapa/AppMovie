@@ -4,22 +4,23 @@ import Observation
 @Observable
 final class HomeViewModel {
     private let authStore: AuthStore
-    private let favoritesStore: FavoritesStore
-    private let service: MovieServiceProtocol
+    private let movieService: MovieServiceProtocol
+    private let favoritesService: FavoritesServiceProtocol
 
     let sections: [MovieSection]
     var searchText: String = ""
     var showLogoutAlert: Bool = false
+    private(set) var hasFavorites: Bool = false
 
-    init(authStore: AuthStore, favoritesStore: FavoritesStore, service: MovieServiceProtocol) {
+    init(authStore: AuthStore, movieService: MovieServiceProtocol, favoritesService: FavoritesServiceProtocol) {
         self.authStore = authStore
-        self.favoritesStore = favoritesStore
-        self.service = service
+        self.movieService = movieService
+        self.favoritesService = favoritesService
 
         sections = [
-            MovieSection(title: "Popular this week", movies: service.popularMovies()),
-            MovieSection(title: "Action", movies: service.movies(forGenre: "Action")),
-            MovieSection(title: "Drama", movies: service.movies(forGenre: "Drama"))
+            MovieSection(title: "Popular this week", movies: movieService.popularMovies()),
+            MovieSection(title: "Action", movies: movieService.movies(forGenre: "Action")),
+            MovieSection(title: "Drama", movies: movieService.movies(forGenre: "Drama"))
         ]
     }
 
@@ -30,17 +31,19 @@ final class HomeViewModel {
     }
 
     var searchResults: [Movie] {
-        service.searchMovies(matching: searchText)
+        movieService.searchMovies(matching: searchText)
     }
 
     // MARK: - Datos para la barra superior
 
-    var hasFavorites: Bool {
-        !favoritesStore.favorites.isEmpty
-    }
-
     var currentUser: String {
         authStore.currentUser
+    }
+
+    // Revisa si hay favoritos guardados para el punto rojo del corazón.
+    // La vista lo llama al aparecer, también al regresar del detalle o de Favoritos.
+    func refreshFavorites() {
+        hasFavorites = !favoritesService.fetchFavorites().isEmpty
     }
 
     // MARK: - Sesión
@@ -56,10 +59,10 @@ final class HomeViewModel {
     // MARK: - ViewModels de las pantallas a las que navega el Home
 
     func makeMovieDetailViewModel(for movie: Movie) -> MovieDetailViewModel {
-        MovieDetailViewModel(movie: movie, favoritesStore: favoritesStore)
+        MovieDetailViewModel(movie: movie, favoritesService: favoritesService)
     }
 
     func makeFavoritesViewModel() -> FavoritesViewModel {
-        FavoritesViewModel(favoritesStore: favoritesStore)
+        FavoritesViewModel(favoritesService: favoritesService)
     }
 }

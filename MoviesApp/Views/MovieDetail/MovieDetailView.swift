@@ -106,6 +106,6 @@ struct MovieDetailView: View {
 
 #Preview {
     MovieDetailView(
-        viewModel: MovieDetailViewModel(movie: Movie.sampleMovies[0], favoritesStore: .inMemory())
+        viewModel: MovieDetailViewModel(movie: Movie.sampleMovies[0], favoritesService: MockFavoritesService())
     )
 }

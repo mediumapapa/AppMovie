@@ -11,13 +11,14 @@ import SwiftData
 @main
 struct movies_appApp: App {
     // Contenedor de SwiftData. Guarda los favoritos en el teléfono para que sigan ahí al volver a abrir la app.
+    // Se conserva aquí mientras la app está abierta; a FavoritesService solo se le pasa su contexto.
     private let modelContainer: ModelContainer
 
-    // Estado compartido de la app (sesión y favoritos)
+    // Estado compartido de la app (sesión)
     @State private var authStore = AuthStore()
-    @State private var favoritesStore: FavoritesStore
 
     private let movieService: MovieServiceProtocol = MockMovieService()
+    private let favoritesService: FavoritesServiceProtocol
 
     init() {
         let container: ModelContainer
@@ -28,7 +29,7 @@ struct movies_appApp: App {
         }
 
         modelContainer = container
-        _favoritesStore = State(initialValue: FavoritesStore(service: FavoritesService(container: container)))
+        favoritesService = FavoritesService(context: container.mainContext)
     }
 
     var body: some Scene {
@@ -38,8 +39,8 @@ struct movies_appApp: App {
                     HomeView(
                         viewModel: HomeViewModel(
                             authStore: authStore,
-                            favoritesStore: favoritesStore,
-                            service: movieService
+                            movieService: movieService,
+                            favoritesService: favoritesService
                         )
                     )
                 }
@@ -47,7 +48,5 @@ struct movies_appApp: App {
                 LoginView(viewModel: LoginViewModel(authStore: authStore))
             }
         }
-        // Deja el contenedor en el entorno de SwiftUI por si más adelante alguna vista usa @Query
-        .modelContainer(modelContainer)
     }
 }

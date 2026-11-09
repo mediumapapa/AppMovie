@@ -2,6 +2,8 @@
 
 En esta práctica los favoritos dejaron de vivir solo en memoria. Ahora se guardan en el teléfono con SwiftData y siguen ahí después de cerrar la app. También agregamos pruebas con XCTest para la regla de favoritos y para el buscador del Home.
 
+> Después de la revisión del PR #9 se cambió parte de lo que se describe aquí (se quitó `FavoritesStore`, se reorganizó `Services/` y cambiaron las pruebas). Lo que quedó está en [Correcciones después de la revisión](#correcciones-después-de-la-revisión), al final.
+
 ## Qué encontramos antes de empezar
 
 - `Movie` tenía `var id = UUID()`. Ese id se generaba de nuevo cada vez que se abría la app, así que una película guardada nunca iba a coincidir con la misma película al volver a abrirla.
@@ -120,3 +122,57 @@ El repositorio no trae el `.xcodeproj`, así que el target de pruebas se agrega 
 - Los favoritos no están separados por usuario. Si en el futuro se usa la sesión real de TMDB, habría que decidir si se guardan por cuenta o se sincronizan con los favoritos de TMDB.
 - Si se cambia `FavoriteMovie` más adelante (agregar o quitar campos), hay que revisar la migración de SwiftData para no perder lo guardado.
 - Las listas personalizadas siguen sin implementarse.
+
+## Correcciones después de la revisión
+
+Cambios que hicimos con los comentarios del profe en el PR #9.
+
+| Comentario | Qué cambió |
+|---|---|
+| `FavoriteStore` es una capa extra; los ViewModels pueden manejarlo directamente | Se borró `State/FavoritesStore.swift`. `HomeViewModel`, `MovieDetailViewModel` y `FavoritesViewModel` reciben `FavoritesServiceProtocol` por su `init` y le piden los datos directamente. |
+| ¿Y si mejor solo se envía el context? | `FavoritesService` ahora tiene `init(context: ModelContext)`. `movies_appApp` crea el `ModelContainer`, lo conserva y le pasa `container.mainContext`. |
+| Separar `Services` en `Mock` y `Production` | `FavoritesService` se movió a `Services/Production/`. Los mocks están en `Services/Mock/`. Los protocolos se quedan en `Services/`. El servicio de TMDB va a ir en `Production/`. |
+| Los previews no corren en el mismo simulador, `inMemory` no es necesario | Se borró `FavoritesStore.inMemory(with:)`. Los `#Preview` usan `MockFavoritesService`, un arreglo sin SwiftData, igual que `MockMovieService`. |
+| ¿Por qué una vista usaría `@Query`? | Se quitó `.modelContainer(...)` de la escena. Ninguna vista toca SwiftData; todo pasa por el ViewModel y el servicio. |
+
+### Capas ahora
+
+```
+FavoritesView / MovieDetailView / HomeView
+        ↓
+FavoritesViewModel / MovieDetailViewModel / HomeViewModel   (ViewModels)
+        ↓
+FavoritesServiceProtocol                                    (Services)
+        ↓
+FavoritesService (Production) · MockFavoritesService (Mock)
+        ↓
+FavoriteMovie                                               (Models, @Model)
+```
+
+### Cómo se mantienen al día las pantallas
+
+Antes las tres pantallas leían el mismo arreglo de `FavoritesStore`. Ahora cada ViewModel le pregunta al servicio, que comparte el mismo `ModelContext`:
+
+- `MovieDetailViewModel` lee si la película está guardada en su `init`, y después de tocar el corazón vuelve a preguntar.
+- `FavoritesViewModel.loadFavorites()` se llama en el `.onAppear` de `FavoritesView`. Así, si se quita un favorito desde el detalle, al regresar la lista ya no lo muestra.
+- `HomeViewModel.refreshFavorites()` se llama en el `.onAppear` de `HomeView` para el punto rojo del corazón.
+
+### Pruebas
+
+`FavoritesStoreTests` ahora se llama `FavoritesTests` y tiene 9 pruebas. Las de agregar, duplicados, id estable, quitar una película que no está guardada y persistencia prueban `FavoritesService`. Las demás prueban los ViewModels:
+
+- `testRemoveDeletesOnlyThatMovie`: la "X" de `FavoritesViewModel`.
+- `testToggleTwiceLeavesMovieOutOfFavorites`: el corazón de `MovieDetailViewModel`.
+- `testFavoritesStartEmpty`: `FavoritesViewModel` empieza vacío.
+- `testHomeShowsFavoritesIndicatorAfterRefresh` (nueva): el punto rojo del Home aparece después de guardar un favorito.
+
+Las pruebas siguen usando un contenedor en memoria, que la prueba guarda en una propiedad mientras corre. `HomeSearchTests` usa `MockFavoritesService`. En total son 14 pruebas.
+
+### Qué hay que hacer en Xcode
+
+Como el `.xcodeproj` no está en el repositorio, cada quien tiene que actualizar su proyecto:
+
+1. Quitar las referencias que aparezcan en rojo: `State/FavoritesStore.swift`, `Services/FavoritesService.swift` y `MoviesAppTests/FavoritesStoreTests.swift`.
+2. Agregar al target de la app `Services/Production/FavoritesService.swift` y `Services/Mock/MockFavoritesService.swift`.
+3. Agregar `MoviesAppTests/FavoritesTests.swift` solo al target `MoviesAppTests`.
+4. Compilar (⌘B) y correr las pruebas (⌘U).

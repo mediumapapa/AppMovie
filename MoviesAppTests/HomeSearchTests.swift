@@ -15,8 +15,8 @@ final class HomeSearchTests: XCTestCase {
     private func makeViewModel() -> HomeViewModel {
         HomeViewModel(
             authStore: AuthStore(isLoggedIn: true, currentUser: "Prueba"),
-            favoritesStore: .inMemory(),
-            service: MockMovieService()
+            movieService: MockMovieService(),
+            favoritesService: MockFavoritesService()
         )
     }
 

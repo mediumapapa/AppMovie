@@ -41,6 +41,10 @@ struct HomeView: View {
             }
         }
         .background(Color.white.ignoresSafeArea())
+        // Al aparecer (y al regresar del detalle o de Favoritos) revisa si hay favoritos para el punto rojo
+        .onAppear {
+            viewModel.refreshFavorites()
+        }
         .navigationDestination(for: Movie.self) { movie in
             MovieDetailView(viewModel: viewModel.makeMovieDetailViewModel(for: movie))
         }
@@ -152,8 +156,8 @@ struct HomeView: View {
         HomeView(
             viewModel: HomeViewModel(
                 authStore: AuthStore(isLoggedIn: true, currentUser: "Demo"),
-                favoritesStore: .inMemory(with: [Movie.sampleMovies[0]]),
-                service: MockMovieService()
+                movieService: MockMovieService(),
+                favoritesService: MockFavoritesService(favorites: [Movie.sampleMovies[0]])
             )
         )
     }
