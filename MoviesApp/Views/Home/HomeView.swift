@@ -30,9 +30,32 @@ struct HomeView: View {
                         // MARK: - Resultados de Búsqueda
                         searchResultsSection
                     } else {
-                        // MARK: - Secciones del Home (populares y géneros)
-                        ForEach(viewModel.sections) { section in
-                            MovieSectionView(title: section.title, movies: section.movies)
+                        // MARK: - Contenido según el estado de la consulta a TMDB
+                        switch viewModel.state {
+                        case .loading:
+                            loadingView
+
+                        case .content(let sections):
+                            // Secciones del Home (populares y géneros)
+                            ForEach(sections) { section in
+                                MovieSectionView(title: section.title, movies: section.movies)
+                            }
+
+                        case .empty:
+                            messageView(
+                                icon: "film",
+                                title: "No hay películas por ahora",
+                                message: "TMDB no regresó películas para mostrar.",
+                                buttonTitle: "Actualizar"
+                            )
+
+                        case .error(let message):
+                            messageView(
+                                icon: "exclamationmark.triangle",
+                                title: "No se pudieron cargar las películas",
+                                message: message,
+                                buttonTitle: "Reintentar"
+                            )
                         }
                     }
 
@@ -44,6 +67,10 @@ struct HomeView: View {
         // Al aparecer (y al regresar del detalle o de Favoritos) revisa si hay favoritos para el punto rojo
         .onAppear {
             viewModel.refreshFavorites()
+        }
+        // Pide las películas a TMDB cuando aparece el Home. .task espera la respuesta sin bloquear la pantalla.
+        .task {
+            await viewModel.loadMoviesIfNeeded()
         }
         .navigationDestination(for: Movie.self) { movie in
             MovieDetailView(viewModel: viewModel.makeMovieDetailViewModel(for: movie))
@@ -149,15 +176,85 @@ struct HomeView: View {
             }
         }
     }
+
+    // MARK: - Estados de la consulta
+
+    // Loading: mientras llega la respuesta de TMDB
+    private var loadingView: some View {
+        ProgressView("Cargando películas...")
+            .frame(maxWidth: .infinity)
+            .padding(.top, 60)
+    }
+
+    // Empty y Error: ícono, mensaje y un botón para volver a pedir las películas
+    private func messageView(icon: String, title: String, message: String, buttonTitle: String) -> some View {
+        VStack(spacing: 14) {
+            Image(systemName: icon)
+                .font(.system(size: 50))
+                .foregroundColor(.gray)
+
+            Text(title)
+                .font(.system(size: 20, weight: .bold))
+                .foregroundColor(.black)
+                .multilineTextAlignment(.center)
+
+            Text(message)
+                .font(.system(size: 14))
+                .foregroundColor(.gray)
+                .multilineTextAlignment(.center)
+
+            Button {
+                Task {
+                    await viewModel.loadMovies()
+                }
+            } label: {
+                Text(buttonTitle)
+                    .font(.system(size: 17, weight: .bold))
+                    .foregroundColor(.black)
+                    .padding(.horizontal, 28)
+                    .padding(.vertical, 10)
+                    .background(Color.appCyan)
+                    .cornerRadius(20)
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.horizontal, 30)
+        .padding(.top, 60)
+    }
 }
 
-#Preview {
+// Cada preview usa MockMovieService configurado para ver un estado distinto, sin internet
+#Preview("Content") {
     NavigationStack {
         HomeView(
             viewModel: HomeViewModel(
                 authStore: AuthStore(isLoggedIn: true, currentUser: "Demo"),
                 movieService: MockMovieService(),
                 favoritesService: MockFavoritesService(favorites: [Movie.sampleMovies[0]])
+            )
+        )
+    }
+}
+
+#Preview("Empty") {
+    NavigationStack {
+        HomeView(
+            viewModel: HomeViewModel(
+                authStore: AuthStore(isLoggedIn: true, currentUser: "Demo"),
+                movieService: MockMovieService(moviesToReturn: []),
+                favoritesService: MockFavoritesService()
+            )
+        )
+    }
+}
+
+#Preview("Error") {
+    NavigationStack {
+        HomeView(
+            viewModel: HomeViewModel(
+                authStore: AuthStore(isLoggedIn: true, currentUser: "Demo"),
+                movieService: MockMovieService(errorToThrow: .noConnection),
+                favoritesService: MockFavoritesService()
             )
         )
     }

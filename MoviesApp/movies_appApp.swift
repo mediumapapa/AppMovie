@@ -17,7 +17,8 @@ struct movies_appApp: App {
     // Estado compartido de la app (sesión)
     @State private var authStore = AuthStore()
 
-    private let movieService: MovieServiceProtocol = MockMovieService()
+    // Películas reales de TMDB. Los previews y las pruebas usan MockMovieService.
+    private let movieService: MovieServiceProtocol = MovieService()
     private let favoritesService: FavoritesServiceProtocol
 
     init() {

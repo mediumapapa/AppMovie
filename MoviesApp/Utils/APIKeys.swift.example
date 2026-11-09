@@ -1,0 +1,9 @@
+// Copia este archivo como APIKeys.swift (en esta misma carpeta) y pega tu token de TMDB.
+// APIKeys.swift está en .gitignore, así el token nunca se sube a GitHub.
+//
+// El token se saca en https://www.themoviedb.org/settings/api
+// ("Token de acceso de lectura a la API", el texto largo que empieza con "eyJ").
+
+enum APIKeys {
+    static let tmdbReadAccessToken = "PEGA_AQUI_TU_TOKEN"
+}

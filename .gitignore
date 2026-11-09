@@ -7,3 +7,6 @@ xcuserdata/
 DerivedData/
 *.xcuserstate
 build/
+
+# Llaves de TMDB (cada quien crea su copia a partir de APIKeys.swift.example)
+MoviesApp/Utils/APIKeys.swift
