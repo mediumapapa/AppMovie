@@ -3,7 +3,8 @@
 //  MoviesAppTests
 //
 //  Pruebas del buscador del Home (HomeViewModel + MockMovieService).
-//  Usan las películas locales de prueba, así el resultado siempre es el mismo y no se llama a TMDB.
+//  El buscador filtra las películas que ya se cargaron, así que cada prueba primero carga
+//  las películas de muestra. No se llama a TMDB, así el resultado siempre es el mismo.
 //
 
 import XCTest
@@ -12,18 +13,22 @@ import XCTest
 @MainActor
 final class HomeSearchTests: XCTestCase {
 
-    private func makeViewModel() -> HomeViewModel {
-        HomeViewModel(
+    // MockMovieService regresa las mismas 10 películas en las tres secciones
+    private func makeLoadedViewModel() async -> HomeViewModel {
+        let viewModel = HomeViewModel(
             authStore: AuthStore(isLoggedIn: true, currentUser: "Prueba"),
-            favoritesStore: .inMemory(),
-            service: MockMovieService()
+            movieService: MockMovieService(),
+            favoritesService: MockFavoritesService()
         )
+        await viewModel.loadMovies()
+        return viewModel
     }
 
     // MARK: - Caso normal
 
-    func testSearchFindsMovieIgnoringUppercase() {
-        let viewModel = makeViewModel()
+    // Interstellar viene en las tres secciones, pero en los resultados aparece una sola vez
+    func testSearchFindsMovieIgnoringUppercase() async {
+        let viewModel = await makeLoadedViewModel()
 
         viewModel.searchText = "INTERSTELLAR"
 
@@ -32,8 +37,8 @@ final class HomeSearchTests: XCTestCase {
     }
 
     // "Gotham" no está en ningún título, solo en la sinopsis de dos películas
-    func testSearchAlsoLooksInOverview() {
-        let viewModel = makeViewModel()
+    func testSearchAlsoLooksInOverview() async {
+        let viewModel = await makeLoadedViewModel()
 
         viewModel.searchText = "gotham"
 
@@ -42,8 +47,8 @@ final class HomeSearchTests: XCTestCase {
 
     // MARK: - Casos límite
 
-    func testSearchIgnoresSpacesAroundText() {
-        let viewModel = makeViewModel()
+    func testSearchIgnoresSpacesAroundText() async {
+        let viewModel = await makeLoadedViewModel()
 
         viewModel.searchText = "   arrival  "
 
@@ -51,8 +56,8 @@ final class HomeSearchTests: XCTestCase {
         XCTAssertEqual(viewModel.searchResults.map { $0.id }, [329865])
     }
 
-    func testOnlySpacesIsNotASearch() {
-        let viewModel = makeViewModel()
+    func testOnlySpacesIsNotASearch() async {
+        let viewModel = await makeLoadedViewModel()
 
         viewModel.searchText = "     "
 
@@ -62,8 +67,8 @@ final class HomeSearchTests: XCTestCase {
 
     // MARK: - Sin resultados
 
-    func testSearchWithoutMatchesReturnsEmptyList() {
-        let viewModel = makeViewModel()
+    func testSearchWithoutMatchesReturnsEmptyList() async {
+        let viewModel = await makeLoadedViewModel()
 
         viewModel.searchText = "Titanic"
 

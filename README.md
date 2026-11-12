@@ -111,19 +111,32 @@ Ya tenemos una parte separada: `AuthStore` y `FavoritesStore` son clases `@Obser
 
 A partir de la práctica 5 el código está organizado con MVVM. El detalle de los cambios está en [Docs/Practica-5.md](Docs/Practica-5.md).
 
-En la práctica 6 los favoritos se guardan con SwiftData y se agregaron pruebas unitarias con XCTest. El detalle está en [Docs/Practica-6.md](Docs/Practica-6.md).
+En la práctica 6 los favoritos se guardan con SwiftData y se agregaron pruebas unitarias con XCTest. Después de la revisión se quitó `FavoritesStore` y los ViewModels usan el servicio de favoritos directamente. El detalle está en [Docs/Practica-6.md](Docs/Practica-6.md).
+
+En la práctica 7 el Home obtiene las películas de la API de TMDB con `URLSession`, `async/await` y `Decodable`, y muestra los estados de carga, contenido, vacío y error. El detalle está en [Docs/Practica-7.md](Docs/Practica-7.md).
 
 ```
 MoviesApp/
-├── Models/       → Movie, MovieSection, FavoriteMovie (@Model de SwiftData)
-├── State/        → AuthStore, FavoritesStore
-├── Services/     → MovieServiceProtocol y MockMovieService
-│                   FavoritesServiceProtocol y FavoritesService (SwiftData)
-├── ViewModels/   → HomeViewModel, LoginViewModel, MovieDetailViewModel, FavoritesViewModel
+├── Models/       → Movie, MovieSection, FavoriteMovie (@Model de SwiftData), TMDBMovie (JSON de TMDB)
+├── State/        → AuthStore
+├── Services/     → MovieServiceProtocol, MovieServiceError, FavoritesServiceProtocol
+│   ├── Mock/       → MockMovieService, MockFavoritesService
+│   └── Production/ → MovieService (TMDB), FavoritesService (SwiftData)
+├── ViewModels/   → HomeViewModel + HomeState, LoginViewModel, MovieDetailViewModel, FavoritesViewModel
 ├── Views/        → Home, Login, MovieDetail, Favorites
-├── Components/   → AppHeaderBar, BorderedFieldModifier, MovieCardView, MovieSectionView
-├── Utils/        → AppColors, AppLinks
+├── Components/   → AppHeaderBar, BorderedFieldModifier, MovieCardView, MovieSectionView, MoviePosterView
+├── Utils/        → AppColors, AppLinks, APIKeys (no se sube; ver abajo)
 └── Resources/    → Assets.xcassets
-MoviesAppTests/   → FavoritesStoreTests, HomeSearchTests (XCTest)
+MoviesAppTests/   → FavoritesTests, HomeSearchTests, HomeStateTests, TMDBDecodingTests (XCTest)
 Docs/             → Prácticas y diseño de navegación
 ```
+
+### Configurar la API de TMDB
+
+El token de TMDB no está en el repositorio. Cada integrante crea su propio archivo:
+
+1. Copiar `MoviesApp/Utils/APIKeys.swift.example` como `MoviesApp/Utils/APIKeys.swift`.
+2. Pegar el **Token de acceso de lectura a la API** (el texto largo que empieza con `eyJ`) de https://www.themoviedb.org/settings/api.
+3. Agregar `APIKeys.swift` al target de la app en Xcode.
+
+`APIKeys.swift` está en `.gitignore`, así que git no lo sube. Si el token falta o está mal, el Home muestra el error "TMDB rechazó el token (código 401)".

@@ -37,6 +37,10 @@ struct FavoritesView: View {
         }
         .background(Color.white.ignoresSafeArea())
         .navigationBarBackButtonHidden(true)
+        // Lee los favoritos al aparecer y al regresar del detalle, por si ahí se quitó alguno
+        .onAppear {
+            viewModel.loadFavorites()
+        }
     }
 
     private var headerBar: some View {
@@ -111,6 +115,6 @@ struct FavoritesView: View {
 
 #Preview {
     NavigationStack {
-        FavoritesView(viewModel: FavoritesViewModel(favoritesStore: .inMemory(with: [Movie.sampleMovies[0], Movie.sampleMovies[1]])))
+        FavoritesView(viewModel: FavoritesViewModel(favoritesService: MockFavoritesService(favorites: [Movie.sampleMovies[0], Movie.sampleMovies[1]])))
     }
 }

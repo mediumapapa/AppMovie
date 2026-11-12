@@ -1,10 +1,9 @@
 import Foundation
 
 // Contrato para obtener películas.
-// Hoy lo cumple MockMovieService; cuando se conecte TMDB se agrega un servicio real
-// sin tener que cambiar los ViewModels.
+// En la app lo cumple MovieService (TMDB, Production) y en los previews y pruebas MockMovieService (Mock).
+// Las funciones son async porque las películas llegan de internet, y throws porque la consulta puede fallar.
 protocol MovieServiceProtocol {
-    func popularMovies() -> [Movie]
-    func movies(forGenre genre: String) -> [Movie]
-    func searchMovies(matching query: String) -> [Movie]
+    func popularMovies() async throws -> [Movie]
+    func movies(forGenreID genreID: Int) async throws -> [Movie]
 }

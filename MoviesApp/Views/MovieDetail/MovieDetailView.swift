@@ -36,11 +36,8 @@ struct MovieDetailView: View {
                     RoundedRectangle(cornerRadius: 24)
                         .fill(Color.white)
 
-                    Image(systemName: viewModel.movie.posterPath)
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 80, height: 80)
-                        .foregroundColor(.black.opacity(0.6))
+                    MoviePosterView(url: viewModel.movie.posterURL, iconSize: 80)
+                        .padding(10)
                 }
                 .frame(height: 240)
                 .frame(maxWidth: .infinity)
@@ -106,6 +103,6 @@ struct MovieDetailView: View {
 
 #Preview {
     MovieDetailView(
-        viewModel: MovieDetailViewModel(movie: Movie.sampleMovies[0], favoritesStore: .inMemory())
+        viewModel: MovieDetailViewModel(movie: Movie.sampleMovies[0], favoritesService: MockFavoritesService())
     )
 }

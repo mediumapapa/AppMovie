@@ -2,16 +2,14 @@ import Foundation
 import SwiftData
 
 // Guarda los favoritos en el teléfono con SwiftData.
-// Recibe el ModelContainer que crea movies_appApp (o uno en memoria en previews y pruebas).
+// Solo recibe el ModelContext: el contenedor lo crea y lo conserva movies_appApp
+// (en las pruebas, la propia prueba con un contenedor en memoria).
 final class FavoritesService: FavoritesServiceProtocol {
 
-    // Se guarda el contenedor para que el contexto no se quede sin él mientras la app está abierta
-    private let container: ModelContainer
     private let context: ModelContext
 
-    init(container: ModelContainer) {
-        self.container = container
-        self.context = ModelContext(container)
+    init(context: ModelContext) {
+        self.context = context
     }
 
     // Favoritos en el orden en que se agregaron

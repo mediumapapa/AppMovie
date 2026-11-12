@@ -13,16 +13,13 @@ struct MovieCardView: View {
 
     var body: some View {
         VStack(alignment: .center, spacing: 8) {
-            // Contenedor del póster (aquí irán las imágenes cuando conectemos la API)
+            // Contenedor del póster (la imagen llega de TMDB)
             ZStack {
                 RoundedRectangle(cornerRadius: isCompact ? 14 : 16)
                     .fill(Color.appCardGray)
 
-                Image(systemName: movie.posterPath)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: isCompact ? 44 : 50, height: isCompact ? 44 : 50)
-                    .foregroundColor(.black.opacity(0.6))
+                MoviePosterView(url: movie.posterURL, iconSize: isCompact ? 44 : 50)
+                    .padding(6)
             }
             .frame(height: isCompact ? 110 : 120)
             .padding(.horizontal, isCompact ? 8 : 10)
