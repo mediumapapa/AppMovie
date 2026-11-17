@@ -121,7 +121,7 @@ Por seguridad, el token de TMDB **no está incluido en el repositorio**. Cada in
 
 ## Flujos
 
-<img width="1526" height="1381" alt="image" src="https://github.com/user-attachments/assets/34e957b1-a63a-4bb1-a08b-f67b5c9ad7af" />
+<img width="1920" height="1080" alt="flujo" src="https://github.com/user-attachments/assets/db712963-39be-4d88-b82b-d93a336aec27" />
 
 1. Login → pantalla de inicio → lista de películas → detalle de la película
 2. Login → pantalla de inicio → búsqueda → resultado → detalle de la película
@@ -136,6 +136,7 @@ Por seguridad, el token de TMDB **no está incluido en el repositorio**. Cada in
 
 <img width="335" height="640" alt="image" src="https://github.com/user-attachments/assets/e5c9c35d-fd6f-4bab-95c4-9e5bac707c0e" />
 
+
 Pantalla para iniciar sesión.
 
 - En la parte superior estará la barra con el nombre de la aplicación, sin los botones de listas, favoritos ni cuenta, ya que el usuario aún no ha iniciado sesión.
@@ -144,9 +145,10 @@ Pantalla para iniciar sesión.
 - Debajo del botón habrá un enlace "¿No tienes cuenta? Regístrate" para crear una cuenta nueva.
 - Se dispondrá de la opción "¿Olvidaste tu contraseña?" para recuperar el acceso.
 
-### **Home**
+### **Home**<img width="1920" height="1080" alt="flujo" src="https://github.com/user-attachments/assets/846ef58c-be1a-4a68-90b2-ae1c19c40729" />
 
-<img width="1080" height="1920" alt="1" src="https://github.com/user-attachments/assets/f943af33-af07-4580-9b54-4cb9f9933d61" />
+
+<img width="1080" height="1920" alt="Home" src="https://github.com/user-attachments/assets/63c5e557-2b4d-4fd7-abba-2154d2ea7ade" />
 
 La pantalla principal de la aplicación.
 
