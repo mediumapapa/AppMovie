@@ -144,6 +144,8 @@ Se almacena localmente **únicamente la lista de películas favoritas del usuari
 
 ## 5. Limitaciones conocidas y funcionalidades pendientes
 
+> **Actualización:** las limitaciones de esta sección ya se resolvieron (listas personalizadas con nota personal, búsqueda global con `/search/movie`, paginación e inicio de sesión real con TMDB). Ver [funcionalidades-finales.md](funcionalidades-finales.md). Se conserva el texto original como registro de la entrega de la Práctica 8.
+
 ### Funcionalidades incompletas
 
 1. **Listas personalizadas (`List`) y sinopsis personal del usuario:**
