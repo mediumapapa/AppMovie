@@ -145,8 +145,7 @@ Pantalla para iniciar sesión.
 - Debajo del botón habrá un enlace "¿No tienes cuenta? Regístrate" para crear una cuenta nueva.
 - Se dispondrá de la opción "¿Olvidaste tu contraseña?" para recuperar el acceso.
 
-### **Home**<img width="1920" height="1080" alt="flujo" src="https://github.com/user-attachments/assets/846ef58c-be1a-4a68-90b2-ae1c19c40729" />
-
+### **Home**
 
 <img width="1080" height="1920" alt="Home" src="https://github.com/user-attachments/assets/63c5e557-2b4d-4fd7-abba-2154d2ea7ade" />
 
