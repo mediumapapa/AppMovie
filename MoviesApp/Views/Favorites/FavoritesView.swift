@@ -52,10 +52,11 @@ struct FavoritesView: View {
                     .font(.system(size: 22, weight: .bold))
                     .foregroundColor(.black)
             }
+            .accessibilityLabel("Regresar")
 
             Spacer()
 
-            AppHeaderTitle(text: "FAVORITES", size: 24)
+            AppHeaderTitle(text: "FAVORITOS", size: 24)
 
             Spacer()
 
@@ -84,6 +85,7 @@ struct FavoritesView: View {
                     .background(Color.white.clipShape(Circle()))
             }
             .padding(6)
+            .accessibilityLabel("Quitar \(movie.title) de favoritos")
         }
     }
 
@@ -99,11 +101,11 @@ struct FavoritesView: View {
                 .foregroundColor(.gray)
 
             Text("No tienes favoritos aún")
-                .font(.system(size: 20, weight: .bold))
+                .font(.title3.weight(.bold))
                 .foregroundColor(.black)
 
             Text("Toca el botón de corazón en el detalle de cualquier película para añadirla a tu lista de favoritos.")
-                .font(.system(size: 14))
+                .font(.subheadline)
                 .foregroundColor(.gray)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 40)

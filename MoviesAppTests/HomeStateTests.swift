@@ -16,16 +16,17 @@ final class HomeStateTests: XCTestCase {
         HomeViewModel(
             authStore: AuthStore(isLoggedIn: true, currentUser: "Prueba"),
             movieService: service,
-            favoritesService: MockFavoritesService()
+            favoritesService: MockFavoritesService(),
+            listsService: MockListsService()
         )
     }
 
     // Lo que debe mostrar el Home cuando el mock regresa las películas de muestra
     private var expectedContent: HomeState {
         .content([
-            MovieSection(title: "Popular this week", movies: Movie.sampleMovies),
-            MovieSection(title: "Action", movies: Movie.sampleMovies),
-            MovieSection(title: "Drama", movies: Movie.sampleMovies)
+            MovieSection(title: "Populares de la semana", movies: Movie.sampleMovies, kind: .popular),
+            MovieSection(title: "Acción", movies: Movie.sampleMovies, kind: .genre(28)),
+            MovieSection(title: "Drama", movies: Movie.sampleMovies, kind: .genre(18))
         ])
     }
 
@@ -105,5 +106,42 @@ final class HomeStateTests: XCTestCase {
         await viewModel.loadMoviesIfNeeded()
 
         XCTAssertEqual(viewModel.state, expectedContent)
+    }
+
+    // MARK: - Ver más (paginación de las secciones)
+
+    // La tarjeta "Ver más" pide la página 2 y la agrega al final sin repetir películas
+    func testLoadMoreAppendsNextPageWithoutDuplicates() async {
+        let firstPage = Array(Movie.sampleMovies[0..<5])
+        let secondPage = Array(Movie.sampleMovies[4..<10]) // Oppenheimer viene repetida
+        let service = MockMovieService(pages: [1: firstPage, 2: secondPage], totalPages: 2)
+        let viewModel = makeViewModel(service: service)
+        await viewModel.loadMovies()
+
+        await viewModel.loadMore(in: "Populares de la semana")
+
+        guard case .content(let sections) = viewModel.state else {
+            return XCTFail("El Home debería seguir mostrando películas")
+        }
+        XCTAssertEqual(sections[0].movies.map { $0.id }, Movie.sampleMovies.map { $0.id })
+        XCTAssertEqual(sections[0].page, 2)
+        XCTAssertFalse(sections[0].canLoadMore)
+        // Las otras secciones no cambian
+        XCTAssertEqual(sections[1].movies, firstPage)
+        XCTAssertTrue(sections[1].canLoadMore)
+    }
+
+    // Si falla "Ver más", se avisa pero no se borran las películas que ya se veían
+    func testLoadMoreErrorKeepsContent() async {
+        let service = MockMovieService(totalPages: 3)
+        let viewModel = makeViewModel(service: service)
+        await viewModel.loadMovies()
+        let before = viewModel.state
+
+        service.errorToThrow = .noConnection
+        await viewModel.loadMore(in: "Acción")
+
+        XCTAssertEqual(viewModel.state, before)
+        XCTAssertEqual(viewModel.loadMoreErrorMessage, "No se pudo conectar con TMDB. Revisa tu conexión a internet.")
     }
 }

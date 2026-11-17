@@ -1,10 +1,25 @@
 import Foundation
 
-// Forma del JSON que regresa TMDB en las listas de películas (/trending y /discover):
-// { "page": 1, "results": [ { "id": 155, "title": "...", "overview": "...", "poster_path": "/...jpg" } ] }
+// Forma del JSON que regresa TMDB en las listas de películas (/trending, /discover y /search):
+// { "page": 1, "results": [ { "id": 155, "title": "...", "overview": "...", "poster_path": "/...jpg" } ], "total_pages": 30 }
 // Solo se declaran los campos que usa la app; JSONDecoder ignora los demás.
 struct TMDBMovieList: Decodable {
+    let page: Int?
     let results: [TMDBMovie]
+    let totalPages: Int?
+
+    enum CodingKeys: String, CodingKey {
+        case page
+        case results
+        case totalPages = "total_pages"
+    }
+
+    // TMDB no deja pedir más allá de la página 500 aunque total_pages diga más
+    var moviePage: MoviePage {
+        let currentPage = page ?? 1
+        let lastPage = min(totalPages ?? currentPage, 500)
+        return MoviePage(movies: results.map { $0.movie }, page: currentPage, totalPages: lastPage)
+    }
 }
 
 struct TMDBMovie: Decodable {

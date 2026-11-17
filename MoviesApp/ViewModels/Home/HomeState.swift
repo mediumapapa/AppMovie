@@ -9,3 +9,12 @@ enum HomeState: Equatable {
     case empty                     // La consulta salió bien, pero no hay películas
     case error(String)             // La consulta falló; trae el mensaje para el usuario
 }
+
+// Estados del buscador. Funciona igual que HomeState, pero para /search/movie.
+enum SearchState: Equatable {
+    case idle                                   // No hay texto que buscar
+    case loading                                // Esperando la respuesta de TMDB
+    case results([Movie], canLoadMore: Bool)    // Películas encontradas y si hay otra página
+    case empty                                  // TMDB no encontró nada con ese texto
+    case error(String)                          // La búsqueda falló; trae el mensaje para el usuario
+}

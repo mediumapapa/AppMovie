@@ -2,16 +2,17 @@
 //  HomeView.swift
 //  movies_app
 //
-//  
 
 import SwiftUI
 
-struct HomeView: View {
-    // Ruta basada en valor para abrir Favoritos dentro del mismo NavigationStack que Movie
-    private enum FavoritesRoute: Hashable {
-        case favorites
-    }
+// Pantallas a las que se llega desde la barra superior del Home.
+// Toda la navegación es por valor (NavigationLink(value:)) para no desfasar el NavigationStack.
+enum AppRoute: Hashable {
+    case favorites
+    case lists
+}
 
+struct HomeView: View {
     @State private var viewModel: HomeViewModel
 
     init(viewModel: HomeViewModel) {
@@ -32,18 +33,27 @@ struct HomeView: View {
                         .padding(.horizontal, 20)
 
                     if viewModel.isSearching {
-                        // MARK: - Resultados de Búsqueda
+                        // MARK: - Resultados de Búsqueda (TMDB /search/movie)
                         searchResultsSection
                     } else {
                         // MARK: - Contenido según el estado de la consulta a TMDB
                         switch viewModel.state {
                         case .loading:
-                            loadingView
+                            loadingView("Cargando películas…")
 
                         case .content(let sections):
                             // Secciones del Home (populares y géneros)
                             ForEach(sections) { section in
-                                MovieSectionView(title: section.title, movies: section.movies)
+                                MovieSectionView(
+                                    title: section.title,
+                                    movies: section.movies,
+                                    canLoadMore: section.canLoadMore,
+                                    isLoadingMore: viewModel.loadingMoreSectionIDs.contains(section.id)
+                                ) {
+                                    Task {
+                                        await viewModel.loadMore(in: section.id)
+                                    }
+                                }
                             }
 
                         case .empty:
@@ -52,7 +62,9 @@ struct HomeView: View {
                                 title: "No hay películas por ahora",
                                 message: "TMDB no regresó películas para mostrar.",
                                 buttonTitle: "Actualizar"
-                            )
+                            ) {
+                                await viewModel.loadMovies()
+                            }
 
                         case .error(let message):
                             messageView(
@@ -60,13 +72,16 @@ struct HomeView: View {
                                 title: "No se pudieron cargar las películas",
                                 message: message,
                                 buttonTitle: "Reintentar"
-                            )
+                            ) {
+                                await viewModel.loadMovies()
+                            }
                         }
                     }
 
                     Spacer(minLength: 30)
                 }
             }
+            .scrollDismissesKeyboard(.interactively)
         }
         .background(Color.white.ignoresSafeArea())
         // Al aparecer (y al regresar del detalle o de Favoritos) revisa si hay favoritos para el punto rojo
@@ -77,19 +92,48 @@ struct HomeView: View {
         .task {
             await viewModel.loadMoviesIfNeeded()
         }
-        .navigationDestination(for: FavoritesRoute.self) { _ in
-            FavoritesView(viewModel: viewModel.makeFavoritesViewModel())
+        // Búsqueda en TMDB: espera a que el usuario deje de escribir un momento antes de consultar.
+        // Si escribe otra letra, SwiftUI cancela esta tarea y empieza otra con el texto nuevo.
+        // Esta tarea también corre al regresar del detalle; search() reconoce que el texto no cambió
+        // y conserva los resultados que ya estaban.
+        .task(id: viewModel.searchText) {
+            guard viewModel.isSearching else {
+                await viewModel.search()
+                return
+            }
+            try? await Task.sleep(for: .milliseconds(450))
+            guard !Task.isCancelled else { return }
+            await viewModel.search()
+        }
+        .navigationDestination(for: AppRoute.self) { route in
+            switch route {
+            case .favorites:
+                FavoritesView(viewModel: viewModel.makeFavoritesViewModel())
+            case .lists:
+                ListsView(viewModel: viewModel.makeListsViewModel())
+            }
         }
         .navigationDestination(for: Movie.self) { movie in
             MovieDetailView(viewModel: viewModel.makeMovieDetailViewModel(for: movie))
         }
-        .alert("Cerrar Sesión", isPresented: $viewModel.showLogoutAlert) {
+        .alert("Cerrar sesión", isPresented: $viewModel.showLogoutAlert) {
             Button("Cancelar", role: .cancel) { }
-            Button("Cerrar Sesión", role: .destructive) {
+            Button("Cerrar sesión", role: .destructive) {
                 viewModel.logout()
             }
         } message: {
-            Text("¿Estás seguro de que deseas salir de tu cuenta?")
+            Text("¿Estás seguro de que deseas salir de tu cuenta? Tus favoritos y listas se quedan guardados en este teléfono.")
+        }
+        .alert(
+            "No se pudieron cargar más películas",
+            isPresented: Binding(
+                get: { viewModel.loadMoreErrorMessage != nil },
+                set: { if !$0 { viewModel.loadMoreErrorMessage = nil } }
+            )
+        ) {
+            Button("Aceptar", role: .cancel) { }
+        } message: {
+            Text(viewModel.loadMoreErrorMessage ?? "")
         }
     }
 
@@ -101,15 +145,16 @@ struct HomeView: View {
             Spacer()
 
             HStack(spacing: 16) {
-                // Botón de listas (para futuras listas personalizadas)
-                Button(action: {}) {
-                    Image(systemName: "plus")
+                // Listas personalizadas
+                NavigationLink(value: AppRoute.lists) {
+                    Image(systemName: "list.bullet")
                         .font(.system(size: 24, weight: .bold))
                         .foregroundColor(.black)
                 }
+                .accessibilityLabel("Mis listas")
 
-                // Enlace a la pantalla de Favoritos (usando navegación por valor para no desfasar el NavigationStack)
-                NavigationLink(value: FavoritesRoute.favorites) {
+                // Favoritos
+                NavigationLink(value: AppRoute.favorites) {
                     ZStack(alignment: .topTrailing) {
                         Image(systemName: "heart")
                             .font(.system(size: 24, weight: .bold))
@@ -124,23 +169,25 @@ struct HomeView: View {
                         }
                     }
                 }
+                .accessibilityLabel(viewModel.hasFavorites ? "Favoritos, tienes películas guardadas" : "Favoritos")
 
                 // Menú de Perfil / Cerrar Sesión
                 Menu {
                     if !viewModel.currentUser.isEmpty {
-                        Text("Usuario: \(viewModel.currentUser)")
+                        Text(viewModel.isGuest ? "Sesión de invitado" : "Usuario: \(viewModel.currentUser)")
                     }
 
                     Button(role: .destructive) {
                         viewModel.requestLogout()
                     } label: {
-                        Label("Cerrar Sesión", systemImage: "rectangle.portrait.and.arrow.right")
+                        Label("Cerrar sesión", systemImage: "rectangle.portrait.and.arrow.right")
                     }
                 } label: {
                     Image(systemName: "person.crop.circle.fill")
                         .font(.system(size: 28))
                         .foregroundColor(.black)
                 }
+                .accessibilityLabel("Mi cuenta")
             }
         }
     }
@@ -148,39 +195,100 @@ struct HomeView: View {
     // Buscador
     private var searchBar: some View {
         HStack(spacing: 14) {
-            Text("Search")
-                .font(.system(size: 20, weight: .regular))
+            Text("Buscar")
+                .font(.title3)
                 .foregroundColor(.black)
+                .accessibilityHidden(true)
 
-            TextField("", text: $viewModel.searchText)
-                .borderedField(cornerRadius: 20, height: 38)
+            HStack {
+                TextField("Título de la película", text: $viewModel.searchText)
+                    .submitLabel(.search)
+                    .autocorrectionDisabled()
+                    .accessibilityLabel("Buscar película en TMDB")
+                    .onSubmit {
+                        Task {
+                            await viewModel.search(force: true)
+                        }
+                    }
+
+                if !viewModel.searchText.isEmpty {
+                    Button {
+                        viewModel.searchText = ""
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundColor(.gray)
+                    }
+                    .accessibilityLabel("Borrar búsqueda")
+                }
+            }
+            .borderedField(cornerRadius: 20, height: 44)
         }
     }
 
-    // Resultados de búsqueda en vivo
+    // Resultados de la búsqueda en TMDB
+    @ViewBuilder
     private var searchResultsSection: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text("Resultados para \"\(viewModel.searchText)\"")
-                .font(.system(size: 20, weight: .bold))
+            Text("Resultados para \"\(viewModel.trimmedSearchText)\"")
+                .font(.title3.weight(.bold))
                 .foregroundColor(.black)
                 .padding(.horizontal, 20)
+                .accessibilityAddTraits(.isHeader)
 
-            if viewModel.searchResults.isEmpty {
-                Text("No se encontraron películas con ese nombre.")
-                    .font(.system(size: 15))
-                    .foregroundColor(.gray)
-                    .padding(.horizontal, 20)
-                    .padding(.top, 10)
-            } else {
+            switch viewModel.searchState {
+            case .idle, .loading:
+                loadingView("Buscando en TMDB…")
+
+            case .results(let movies, let canLoadMore):
                 LazyVGrid(columns: [GridItem(.flexible(), spacing: 16), GridItem(.flexible(), spacing: 16)], spacing: 16) {
-                    ForEach(viewModel.searchResults) { movie in
+                    ForEach(movies) { movie in
                         NavigationLink(value: movie) {
-                            MovieCardView(movie: movie)
+                            MovieCardView(movie: movie, style: .compact)
                         }
                         .buttonStyle(PlainButtonStyle())
                     }
                 }
                 .padding(.horizontal, 20)
+
+                if canLoadMore {
+                    Button {
+                        Task {
+                            await viewModel.loadMoreSearchResults()
+                        }
+                    } label: {
+                        HStack(spacing: 10) {
+                            if viewModel.isLoadingMoreResults {
+                                ProgressView()
+                            }
+                            Text(viewModel.isLoadingMoreResults ? "Cargando…" : "Cargar más resultados")
+                                .font(.headline)
+                        }
+                        .foregroundColor(.black)
+                        .padding(.horizontal, 28)
+                        .padding(.vertical, 12)
+                        .background(Color.appCyan)
+                        .cornerRadius(20)
+                    }
+                    .disabled(viewModel.isLoadingMoreResults)
+                    .frame(maxWidth: .infinity)
+                }
+
+            case .empty:
+                Text("No se encontraron películas con ese nombre.")
+                    .font(.body)
+                    .foregroundColor(.gray)
+                    .padding(.horizontal, 20)
+                    .padding(.top, 10)
+
+            case .error(let message):
+                messageView(
+                    icon: "exclamationmark.triangle",
+                    title: "No se pudo buscar",
+                    message: message,
+                    buttonTitle: "Reintentar"
+                ) {
+                    await viewModel.search(force: true)
+                }
             }
         }
     }
@@ -188,36 +296,43 @@ struct HomeView: View {
     // MARK: - Estados de la consulta
 
     // Loading: mientras llega la respuesta de TMDB
-    private var loadingView: some View {
-        ProgressView("Cargando películas...")
+    private func loadingView(_ text: String) -> some View {
+        ProgressView(text)
             .frame(maxWidth: .infinity)
             .padding(.top, 60)
     }
 
-    // Empty y Error: ícono, mensaje y un botón para volver a pedir las películas
-    private func messageView(icon: String, title: String, message: String, buttonTitle: String) -> some View {
+    // Empty y Error: ícono, mensaje y un botón para volver a consultar
+    private func messageView(
+        icon: String,
+        title: String,
+        message: String,
+        buttonTitle: String,
+        retry: @escaping () async -> Void
+    ) -> some View {
         VStack(spacing: 14) {
             Image(systemName: icon)
                 .font(.system(size: 50))
                 .foregroundColor(.gray)
+                .accessibilityHidden(true)
 
             Text(title)
-                .font(.system(size: 20, weight: .bold))
+                .font(.title3.weight(.bold))
                 .foregroundColor(.black)
                 .multilineTextAlignment(.center)
 
             Text(message)
-                .font(.system(size: 14))
+                .font(.subheadline)
                 .foregroundColor(.gray)
                 .multilineTextAlignment(.center)
 
             Button {
                 Task {
-                    await viewModel.loadMovies()
+                    await retry()
                 }
             } label: {
                 Text(buttonTitle)
-                    .font(.system(size: 17, weight: .bold))
+                    .font(.headline)
                     .foregroundColor(.black)
                     .padding(.horizontal, 28)
                     .padding(.vertical, 10)
@@ -231,14 +346,15 @@ struct HomeView: View {
     }
 }
 
-// Cada preview usa MockMovieService configurado para ver un estado distinto, sin internet
+// Cada preview usa servicios de prueba configurados para ver un estado distinto, sin internet
 #Preview("Content") {
     NavigationStack {
         HomeView(
             viewModel: HomeViewModel(
                 authStore: AuthStore(isLoggedIn: true, currentUser: "Demo"),
-                movieService: MockMovieService(),
-                favoritesService: MockFavoritesService(favorites: [Movie.sampleMovies[0]])
+                movieService: MockMovieService(totalPages: 3),
+                favoritesService: MockFavoritesService(favorites: [Movie.sampleMovies[0]]),
+                listsService: MockListsService.sample
             )
         )
     }
@@ -250,7 +366,8 @@ struct HomeView: View {
             viewModel: HomeViewModel(
                 authStore: AuthStore(isLoggedIn: true, currentUser: "Demo"),
                 movieService: MockMovieService(moviesToReturn: []),
-                favoritesService: MockFavoritesService()
+                favoritesService: MockFavoritesService(),
+                listsService: MockListsService()
             )
         )
     }
@@ -262,7 +379,8 @@ struct HomeView: View {
             viewModel: HomeViewModel(
                 authStore: AuthStore(isLoggedIn: true, currentUser: "Demo"),
                 movieService: MockMovieService(errorToThrow: .noConnection),
-                favoritesService: MockFavoritesService()
+                favoritesService: MockFavoritesService(),
+                listsService: MockListsService()
             )
         )
     }

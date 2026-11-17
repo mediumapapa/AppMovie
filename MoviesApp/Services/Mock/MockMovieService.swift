@@ -22,28 +22,57 @@ extension Movie {
 // Se puede configurar para ver cada estado del Home: con películas, sin resultados o con error.
 final class MockMovieService: MovieServiceProtocol {
 
-    // Lo que regresa cada consulta
+    // Lo que regresa cada consulta (en todas las páginas, salvo que pages diga otra cosa)
     var moviesToReturn: [Movie]
+    // Películas de una página en particular, para probar "cargar más"
+    var pages: [Int: [Movie]]
+    // Cuántas páginas dice tener cada consulta
+    var totalPages: Int
     // Si no es nil, cada consulta lanza este error en lugar de regresar películas
     var errorToThrow: MovieServiceError?
 
-    init(moviesToReturn: [Movie] = Movie.sampleMovies, errorToThrow: MovieServiceError? = nil) {
+    // Registro de lo que se pidió, para revisarlo en las pruebas
+    private(set) var searchedQueries: [String] = []
+    private(set) var requestedPages: [Int] = []
+
+    init(
+        moviesToReturn: [Movie] = Movie.sampleMovies,
+        pages: [Int: [Movie]] = [:],
+        totalPages: Int = 1,
+        errorToThrow: MovieServiceError? = nil
+    ) {
         self.moviesToReturn = moviesToReturn
+        self.pages = pages
+        self.totalPages = totalPages
         self.errorToThrow = errorToThrow
     }
 
-    func popularMovies() async throws -> [Movie] {
-        try result()
+    func popularMovies(page: Int) async throws -> MoviePage {
+        try result(page: page, movies: movies(forPage: page))
     }
 
-    func movies(forGenreID genreID: Int) async throws -> [Movie] {
-        try result()
+    func movies(forGenreID genreID: Int, page: Int) async throws -> MoviePage {
+        try result(page: page, movies: movies(forPage: page))
     }
 
-    private func result() throws -> [Movie] {
+    // Igual que TMDB, busca el texto en el título o en la sinopsis
+    func searchMovies(query: String, page: Int) async throws -> MoviePage {
+        searchedQueries.append(query)
+        let matches = movies(forPage: page).filter {
+            $0.title.localizedCaseInsensitiveContains(query) || $0.overview.localizedCaseInsensitiveContains(query)
+        }
+        return try result(page: page, movies: matches)
+    }
+
+    private func movies(forPage page: Int) -> [Movie] {
+        pages[page] ?? moviesToReturn
+    }
+
+    private func result(page: Int, movies: [Movie]) throws -> MoviePage {
+        requestedPages.append(page)
         if let error = errorToThrow {
             throw error
         }
-        return moviesToReturn
+        return MoviePage(movies: movies, page: page, totalPages: totalPages)
     }
 }
