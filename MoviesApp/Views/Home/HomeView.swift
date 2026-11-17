@@ -7,6 +7,11 @@
 import SwiftUI
 
 struct HomeView: View {
+    // Ruta basada en valor para abrir Favoritos dentro del mismo NavigationStack que Movie
+    private enum FavoritesRoute: Hashable {
+        case favorites
+    }
+
     @State private var viewModel: HomeViewModel
 
     init(viewModel: HomeViewModel) {
@@ -72,6 +77,9 @@ struct HomeView: View {
         .task {
             await viewModel.loadMoviesIfNeeded()
         }
+        .navigationDestination(for: FavoritesRoute.self) { _ in
+            FavoritesView(viewModel: viewModel.makeFavoritesViewModel())
+        }
         .navigationDestination(for: Movie.self) { movie in
             MovieDetailView(viewModel: viewModel.makeMovieDetailViewModel(for: movie))
         }
@@ -100,8 +108,8 @@ struct HomeView: View {
                         .foregroundColor(.black)
                 }
 
-                // Enlace a la pantalla de Favoritos
-                NavigationLink(destination: FavoritesView(viewModel: viewModel.makeFavoritesViewModel())) {
+                // Enlace a la pantalla de Favoritos (usando navegación por valor para no desfasar el NavigationStack)
+                NavigationLink(value: FavoritesRoute.favorites) {
                     ZStack(alignment: .topTrailing) {
                         Image(systemName: "heart")
                             .font(.system(size: 24, weight: .bold))
