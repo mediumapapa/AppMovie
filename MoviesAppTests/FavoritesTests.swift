@@ -75,7 +75,8 @@ final class FavoritesTests: XCTestCase {
         let viewModel = HomeViewModel(
             authStore: AuthStore(isLoggedIn: true, currentUser: "Prueba"),
             movieService: MockMovieService(),
-            favoritesService: service
+            favoritesService: service,
+            listsService: MockListsService()
         )
         viewModel.refreshFavorites()
         XCTAssertFalse(viewModel.hasFavorites)
@@ -115,7 +116,7 @@ final class FavoritesTests: XCTestCase {
     // Lo que hace el botón de corazón del detalle
     func testToggleTwiceLeavesMovieOutOfFavorites() throws {
         let service = try makeService()
-        let viewModel = MovieDetailViewModel(movie: dune, favoritesService: service)
+        let viewModel = MovieDetailViewModel(movie: dune, favoritesService: service, listsService: MockListsService())
 
         viewModel.toggleFavorite()
         XCTAssertTrue(viewModel.isFavorite)

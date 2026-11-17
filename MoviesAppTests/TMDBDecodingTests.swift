@@ -67,4 +67,24 @@ final class TMDBDecodingTests: XCTestCase {
 
         XCTAssertThrowsError(try JSONDecoder().decode(TMDBMovieList.self, from: Data(json.utf8)))
     }
+
+    // MARK: - Paginación
+
+    func testReadsPageInformation() throws {
+        let movieList = try JSONDecoder().decode(TMDBMovieList.self, from: Data(sampleJSON.utf8))
+
+        XCTAssertEqual(movieList.moviePage.page, 1)
+        XCTAssertEqual(movieList.moviePage.totalPages, 1)
+        XCTAssertFalse(movieList.moviePage.hasMore)
+    }
+
+    // TMDB no deja pedir más allá de la página 500 aunque total_pages diga más
+    func testTotalPagesIsCappedAt500() throws {
+        let json = #"{ "page": 3, "results": [], "total_pages": 9000, "total_results": 180000 }"#
+
+        let page = try JSONDecoder().decode(TMDBMovieList.self, from: Data(json.utf8)).moviePage
+
+        XCTAssertEqual(page.totalPages, 500)
+        XCTAssertTrue(page.hasMore)
+    }
 }

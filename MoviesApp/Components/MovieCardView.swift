@@ -5,7 +5,13 @@ struct MovieCardView: View {
     let movie: Movie
     var style: Style = .regular
 
-    // regular: carruseles y búsqueda. compact: cuadrícula de favoritos.
+    // Medidas de la tarjeta que crecen con el tamaño de letra del iPhone,
+    // para que el título y la sinopsis no se corten con letra grande
+    @ScaledMetric(relativeTo: .body) private var regularWidth: CGFloat = 170
+    @ScaledMetric(relativeTo: .body) private var regularHeight: CGFloat = 260
+    @ScaledMetric(relativeTo: .body) private var compactHeight: CGFloat = 240
+
+    // regular: carruseles. compact: cuadrículas de búsqueda y favoritos.
     enum Style {
         case regular
         case compact
@@ -27,7 +33,7 @@ struct MovieCardView: View {
 
             // Título
             Text(movie.title)
-                .font(.system(size: isCompact ? 14 : 15, weight: .bold))
+                .font(.subheadline.weight(.bold))
                 .foregroundColor(.black)
                 .multilineTextAlignment(.center)
                 .lineLimit(2)
@@ -35,8 +41,8 @@ struct MovieCardView: View {
 
             // Sinopsis
             Text(movie.overview)
-                .font(.system(size: isCompact ? 10 : 11))
-                .foregroundColor(.black.opacity(isCompact ? 0.75 : 0.8))
+                .font(.caption)
+                .foregroundColor(.black.opacity(0.8))
                 .multilineTextAlignment(.leading)
                 .lineLimit(isCompact ? 3 : 4)
                 .padding(.horizontal, isCompact ? 8 : 10)
@@ -44,13 +50,17 @@ struct MovieCardView: View {
 
             Spacer(minLength: 0)
         }
-        .frame(width: isCompact ? nil : 170, height: isCompact ? 240 : 260)
+        .frame(width: isCompact ? nil : min(regularWidth, 300), height: min(isCompact ? compactHeight : regularHeight, 520))
         .frame(maxWidth: isCompact ? .infinity : nil)
         .background(Color.white)
         .overlay(
             RoundedRectangle(cornerRadius: isCompact ? 8 : 4)
                 .stroke(Color.black, lineWidth: isCompact ? 1.6 : 1.8)
         )
+        // VoiceOver lee la tarjeta como un solo elemento: título y sinopsis
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(movie.title)
+        .accessibilityHint(movie.overview)
     }
 
     private var isCompact: Bool {

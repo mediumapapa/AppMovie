@@ -10,27 +10,29 @@ import SwiftData
 
 @main
 struct movies_appApp: App {
-    // Contenedor de SwiftData. Guarda los favoritos en el teléfono para que sigan ahí al volver a abrir la app.
-    // Se conserva aquí mientras la app está abierta; a FavoritesService solo se le pasa su contexto.
+    // Contenedor de SwiftData. Guarda favoritos y listas en el teléfono para que sigan ahí al volver a abrir la app.
+    // Se conserva aquí mientras la app está abierta; a los servicios solo se les pasa su contexto.
     private let modelContainer: ModelContainer
 
-    // Estado compartido de la app (sesión)
-    @State private var authStore = AuthStore()
+    // Sesión de TMDB. Se recupera del Llavero al abrir la app, así no hay que iniciar sesión cada vez.
+    @State private var authStore = AuthStore(authService: AuthService(), storage: KeychainSessionStorage())
 
-    // Películas reales de TMDB. Los previews y las pruebas usan MockMovieService.
+    // Servicios reales. Los previews y las pruebas usan los de Mock/.
     private let movieService: MovieServiceProtocol = MovieService()
     private let favoritesService: FavoritesServiceProtocol
+    private let listsService: ListsServiceProtocol
 
     init() {
         let container: ModelContainer
         do {
-            container = try ModelContainer(for: FavoriteMovie.self)
+            container = try ModelContainer(for: FavoriteMovie.self, MovieList.self, MovieListEntry.self)
         } catch {
             fatalError("No se pudo crear el contenedor de SwiftData: \(error)")
         }
 
         modelContainer = container
         favoritesService = FavoritesService(context: container.mainContext)
+        listsService = ListsService(context: container.mainContext)
     }
 
     var body: some Scene {
@@ -41,7 +43,8 @@ struct movies_appApp: App {
                         viewModel: HomeViewModel(
                             authStore: authStore,
                             movieService: movieService,
-                            favoritesService: favoritesService
+                            favoritesService: favoritesService,
+                            listsService: listsService
                         )
                     )
                 }
